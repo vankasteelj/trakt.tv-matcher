@@ -1,0 +1,29 @@
+{
+    "name": "trakt.tv-matcher",
+    "version": "0.0.1",
+    "description": "Plugin adding a matcher for trakt.tv module",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/vankasteelj/trakt.tv-matcher"
+    },
+    "keywords": [
+        "trakt.tv",
+        "trakt",
+        "tv",
+        "plugin",
+        "addon",
+        "matcher",
+        "filename"
+    ],
+    "contributors": {
+        "name": "vankasteelj"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/vankasteelj/trakt.tv-matcher/issues"
+    },
+    "dependencies": {
+        "video-name-parser": "^1.0.1"
+    }
+}
