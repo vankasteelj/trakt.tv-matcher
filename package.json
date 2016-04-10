@@ -1,6 +1,6 @@
 {
     "name": "trakt.tv-matcher",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Plugin adding a matcher for trakt.tv module",
     "main": "index.js",
     "repository": {
@@ -24,6 +24,6 @@
         "url": "https://github.com/vankasteelj/trakt.tv-matcher/issues"
     },
     "dependencies": {
-        "video-name-parser": "^1.0.1"
+        "video-name-parser": "^1.2.0"
     }
 }
