@@ -78,7 +78,7 @@ var injectQuality = function (title) {
 };
 
 var removeKeywords = function (str) {
-    for (var i in keywordFilter) {
+    for (var i = 0, len = keywordFilter.length; i < len; i++) {
         str = str.replace(keywordFilter[i], '');
     }
     return str.trim();
@@ -109,7 +109,7 @@ var checkApostrophy = function (obj) {
 
     var matcher = obj.title[0].match(/\w{2}s-/gi);
     if (matcher !== null) {
-        for (var i = 0; i < matcher.length; i++) {
+        for (var i = 0, len = matcher.length; i < len; i++) {
             obj.title.push(obj.title[0].replace(matcher[i], matcher[i].substring(0, 2) + '-s-'));
         }
     }
@@ -133,20 +133,20 @@ var checkTraktSearch = function (trakt, filename) {
         fail = 0;
 
     // words in title
-    var traktObj = trakt
+    var words = trakt
         .match(/[\w+\s+]+/ig)[0]
         .split(' ');
 
     // verification
-    traktObj.forEach(function (word) {
+    for (var i = 0, len = words.length; i < len; i++) {
         // check only words longer than 4 chars
-        if (word.length >= 4) {
-            var regxp = new RegExp(word.slice(0, 3), 'ig');
+        if (words[i].length >= 4) {
+            var regxp = new RegExp(words[i].slice(0, 3), 'ig');
             filename.replace(/\W/ig, '').match(regxp) === null ?
                 fail++ :
                 success++;
         }
-    });
+    }
 
     // avoid /0 errors
     if (success + fail === 0) fail = 1;
@@ -248,7 +248,7 @@ Matcher.match = function (obj) {
             });
         });
     })).then(function (arr) {
-        for (var i in arr) {
+        for (var i = 0, len = arr.length; i < len; i++) {
             if (arr[i].error === null) {
                 return arr[i].data;
             }
