@@ -149,6 +149,8 @@ var checkTraktSearch = function(trakt, filename) {
     var success = 0,
         fail = 0;
 
+    console.log(filename);
+    console.log(trakt);
     // words in title
     var words = trakt
         .match(/[\w+\s+]+/ig)[0]
@@ -157,7 +159,7 @@ var checkTraktSearch = function(trakt, filename) {
     // verification
     for (var i = 0, len = words.length; i < len; i++) {
         // check only words longer than 4 chars
-        if (words[i].length >= 4) {
+        if (words[i].length >= 3) {
             var regxp = new RegExp(words[i].slice(0, 3), 'ig');
             filename.replace(/\W/ig, '').match(regxp) === null ?
                 fail++ :
@@ -172,7 +174,7 @@ var checkTraktSearch = function(trakt, filename) {
     var successRate = success / (success + fail);
     Trakt._debug('Trakt search matching rate: ' + (successRate * 100) + '%');
 
-    return successRate >= .7;
+    return successRate >= .6;
 };
 
 var searchMovie = function(title, year) {
@@ -205,7 +207,7 @@ var searchEpisode = function(title, season, episode, year) {
         if (!title || !season || !episode) {
             return reject('Title, season and episode need to be passed');
         }
-        if (year) {
+        if (year && title.indexOf(year) === -1) {
             title += '-' + year;
         }
         // find a matching show
