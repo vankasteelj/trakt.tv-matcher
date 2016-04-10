@@ -149,8 +149,6 @@ var checkTraktSearch = function(trakt, filename) {
     var success = 0,
         fail = 0;
 
-    console.log(filename);
-    console.log(trakt);
     // words in title
     var words = trakt
         .match(/[\w+\s+]+/ig)[0]
