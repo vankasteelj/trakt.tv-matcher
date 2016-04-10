@@ -3,13 +3,14 @@ var Trakt; // the main API for trakt (npm: 'trakt.tv')
 var path = require('path');
 var parseVideo = require('video-name-parser');
 var keywordFilter = require('./keywords_filter.json');
+var match; // global used to reduce nb of calls to trakt
 
 // Initialize the module
-Matcher.init = function (trakt) {
+Matcher.init = function(trakt) {
     Trakt = trakt;
 };
 
-var injectPath = function (file, loc) {
+var injectPath = function(file, loc) {
     if (!file) {
         file = path.basename(loc);
     }
@@ -17,7 +18,7 @@ var injectPath = function (file, loc) {
     return file; // maybe check dir tree some day
 };
 
-var injectTorrent = function (file, torrent) {
+var injectTorrent = function(file, torrent) {
     var parsed;
     var clean = torrent.match(/.*?(complete.series|complete.season|s\d+|season|\[|hdtv|\W\s)/i);
 
@@ -37,7 +38,7 @@ var injectTorrent = function (file, torrent) {
     return file;
 };
 
-var parseInput = function (obj) {
+var parseInput = function(obj) {
     var file;
 
     if (!obj || (obj && (!obj.path && !obj.filename))) {
@@ -67,7 +68,7 @@ var parseInput = function (obj) {
     }
 };
 
-var injectQuality = function (title) {
+var detectQuality = function(title) {
     if (title.match(/480[pix]/i)) {
         return 'SD';
     }
@@ -79,7 +80,7 @@ var injectQuality = function (title) {
     }
 
     // not found, trying harder
-    if (title.match(/DSR|DVDRIP|DVD\WRIP/i)) {
+    if (title.match(/dsr|dvdrip|dvd\Wrip|hdrip|webrip|dvdsrc|b[rd]rip|web-dl|hdts|hd\Wts|\Wts\W|telesync|\Wcam\W/i)) {
         return 'SD';
     }
     if (title.match(/hdtv/i) && !title.match(/720[pix]/i)) {
@@ -88,8 +89,7 @@ var injectQuality = function (title) {
     return false;
 };
 
-var removeKeywords = function (str) {
-    console.log(str)
+var removeKeywords = function(str) {
     var words = str.split(' ');
     for (var i = 0, leni = words.length; i < leni; i++) {
         for (var j = 0, lenj = keywordFilter.length; j < lenj; j++) {
@@ -98,11 +98,10 @@ var removeKeywords = function (str) {
             }
         }
     }
-
     return words.join(' ').trim();
 };
 
-var formatTitle = function (title) {
+var formatTitle = function(title) {
     var formatted = parseVideo(title);
     if (!formatted.name) {
         formatted.name = title.replace(/[^a-z0-9]/g, '-').replace(/\-+/g, '-').replace(/\-$/, '');
@@ -110,7 +109,7 @@ var formatTitle = function (title) {
 
     formatted.name = removeKeywords(formatted.name);
 
-    Trakt._debug('Parsed: '+formatted.name);
+    Trakt._debug('Parsed: ' + formatted.name);
     return {
         title: formatted.name
             .replace(/[^a-z0-9]/g, '-')
@@ -122,7 +121,7 @@ var formatTitle = function (title) {
     };
 };
 
-var checkApostrophy = function (obj) {
+var checkApostrophy = function(obj) {
     obj.title = [obj.title];
 
     var matcher = obj.title[0].match(/\w{2}s-/gi);
@@ -135,17 +134,17 @@ var checkApostrophy = function (obj) {
     return obj;
 };
 
-var checkYear = function (obj) {
+var checkYear = function(obj) {
     if (obj.season && obj.episode) {
         var maybe = '' + obj.season + obj.episode;
         if (maybe.match(/19\d{2}|20\d{2}/) !== null && obj.title[0].match(/19\d{2}|20\d{2}/) === null) {
-            obj.title.push(obj.title[0]+ '-' + maybe);
+            obj.title.push(obj.title[0] + '-' + maybe);
         }
     }
     return obj;
 };
 
-var checkTraktSearch = function (trakt, filename) {
+var checkTraktSearch = function(trakt, filename) {
     // stats
     var success = 0,
         fail = 0;
@@ -171,23 +170,24 @@ var checkTraktSearch = function (trakt, filename) {
 
     // calc rate
     var successRate = success / (success + fail);
-    Trakt._debug('Trakt search matching rate: '+(successRate*100)+'%');
+    Trakt._debug('Trakt search matching rate: ' + (successRate * 100) + '%');
 
     return successRate >= .7;
 };
 
-var searchMovie = function (title, year) {
-    return new Promise(function (resolve, reject) {
+var searchMovie = function(title, year) {
+    return new Promise(function(resolve, reject) {
         // find a matching movie
         Trakt.search({
             query: title,
             year: year,
             type: 'movie'
-        }).then(function (summary) {
+        }).then(function(summary) {
             if (!summary.length) {
                 reject('Trakt could not find a match');
             } else {
                 if (checkTraktSearch(summary[0].movie.title, title)) {
+                    match = true;
                     resolve({
                         movie: summary[0].movie,
                         type: 'movie'
@@ -200,8 +200,8 @@ var searchMovie = function (title, year) {
     });
 };
 
-var searchEpisode = function (title, season, episode) {
-    return new Promise(function (resolve, reject) {
+var searchEpisode = function(title, season, episode) {
+    return new Promise(function(resolve, reject) {
         if (!title || !season || !episode) {
             return reject('Title, season and episode need to be passed');
         }
@@ -209,14 +209,15 @@ var searchEpisode = function (title, season, episode) {
         Trakt.shows.summary({
             id: title,
             extended: 'full,images'
-        }).then(function (summary) {
+        }).then(function(summary) {
+            match = true;
             // find the corresponding episode
             return Trakt.episodes.summary({
-                id: title, 
-                season: season, 
+                id: title,
+                season: season,
                 episode: episode,
                 extended: 'full,images'
-            }).then(function (episodeSummary) {
+            }).then(function(episodeSummary) {
                 resolve({
                     show: summary,
                     episode: episodeSummary,
@@ -231,41 +232,48 @@ var searchEpisode = function (title, season, episode) {
  * filename: name of the file
  * path: path to the file
  * torrent: torrent title (or magnet dn) containing the file
- */ 
-Matcher.match = function (obj) {
+ */
+Matcher.match = function(obj) {
+    match = false;
 
     var file = parseInput(obj);
 
     var data = {
-        quality: injectQuality(file),
+        quality: detectQuality(file),
         filename: obj.filename || path.basename(obj.path)
     };
 
     var tests = checkYear(checkApostrophy(formatTitle(file)));
-    return Promise.all(tests.title.map(function (title) {
-        return searchEpisode(title, tests.season, tests.episode).then(function (results) {
+    return Promise.all(tests.title.map(function(title) {
+        return searchEpisode(title, tests.season, tests.episode).then(function(results) {
             results.filename = data.filename;
             results.quality = data.quality;
             return {
                 error: null,
                 data: results
             }
-        }).catch(function () {
-            return searchMovie(title, tests.year).then(function (results) {
+        }).catch(function() {
+            if (match) {
+                return {
+                    error: 'already found',
+                    data: null
+                };
+            }
+            return searchMovie(title, tests.year).then(function(results) {
                 results.filename = data.filename;
                 results.quality = data.quality;
                 return {
                     error: null,
                     data: results
                 }
-            }).catch(function (error) {
+            }).catch(function(error) {
                 return {
                     error: error,
                     data: data
                 };
             });
         });
-    })).then(function (arr) {
+    })).then(function(arr) {
         for (var i = 0, len = arr.length; i < len; i++) {
             if (arr[i].error === null) {
                 return arr[i].data;
