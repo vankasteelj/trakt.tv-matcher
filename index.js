@@ -200,10 +200,13 @@ var searchMovie = function(title, year) {
     });
 };
 
-var searchEpisode = function(title, season, episode) {
+var searchEpisode = function(title, season, episode, year) {
     return new Promise(function(resolve, reject) {
         if (!title || !season || !episode) {
             return reject('Title, season and episode need to be passed');
+        }
+        if (year) {
+            title += '-' + year;
         }
         // find a matching show
         Trakt.shows.summary({
@@ -245,7 +248,7 @@ Matcher.match = function(obj) {
 
     var tests = checkYear(checkApostrophy(formatTitle(file)));
     return Promise.all(tests.title.map(function(title) {
-        return searchEpisode(title, tests.season, tests.episode).then(function(results) {
+        return searchEpisode(title, tests.season, tests.episode, tests.year).then(function(results) {
             results.filename = data.filename;
             results.quality = data.quality;
             return {
