@@ -59,12 +59,16 @@ var parseInput = function (obj) {
             return injectTorrent(obj.filename, obj.torrent);
         }
     } else if (obj.path) {
-        return injectPath(null, obj.path);
+        if (obj.torrent) {
+            return injectTorrent(injectPath(null, obj.path), obj.torrent);
+        } else {
+            return injectPath(null, obj.path);
+        }
     }
 };
 
 var injectQuality = function (title) {
-    if (title.match(/480[pix]|DSR|DVDRIP|DVD\WRIP|HDTV/i) && !title.match(/720[pix]/i)) {
+    if (title.match(/480[pix]/i)) {
         return 'SD';
     }
     if (title.match(/720[pix]/i) && !title.match(/dvdrip|dvd\Wrip/i)) {
@@ -74,6 +78,13 @@ var injectQuality = function (title) {
         return 'FHD';
     }
 
+    // not found, trying harder
+    if (title.match(/DSR|DVDRIP|DVD\WRIP/i)) {
+        return 'SD';
+    }
+    if (title.match(/hdtv/i) && !title.match(/720[pix]/i)) {
+        return 'SD';
+    }
     return false;
 };
 
