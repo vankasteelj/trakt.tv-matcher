@@ -2,6 +2,7 @@ var Matcher = module.exports = {}; // Skeleton
 var Trakt; // the main API for trakt (npm: 'trakt.tv')
 var path = require('path');
 var parseVideo = require('video-name-parser');
+var keywordFilter = require('./keywords_filter.json');
 
 // Initialize the module
 Matcher.init = function (trakt) {
@@ -63,36 +64,40 @@ var parseInput = function (obj) {
 };
 
 var injectQuality = function (title) {
-    if (title.match(/480[pix]/i)) {
-        return '480p';
+    if (title.match(/480[pix]|DSR|DVDRIP|DVD\WRIP|HDTV/i) && !title.match(/720[pix]/i)) {
+        return 'SD';
     }
     if (title.match(/720[pix]/i) && !title.match(/dvdrip|dvd\Wrip/i)) {
-        return '720p';
+        return 'HD';
     }
     if (title.match(/1080[pix]/i)) {
-        return '1080p';
+        return 'FHD';
     }
 
-    // not found, trying harder
-    if (title.match(/DSR|DVDRIP|DVD\WRIP/i)) {
-        return '480p';
-    }
-    if (title.match(/hdtv/i) && !title.match(/720[pix]/i)) {
-        return '480p';
-    }
     return false;
+};
+
+var removeKeywords = function (str) {
+    for (var i in keywordFilter) {
+        str = str.replace(keywordFilter[i], '');
+    }
+    return str.trim();
 };
 
 var formatTitle = function (title) {
     var formatted = parseVideo(title);
     if (!formatted.name) {
-        formatted.name = title.replace(/[^a-z0-9]/g, '-').replace(/\-+/g, '-').replace(/\-$/, '')
+        formatted.name = title.replace(/[^a-z0-9]/g, '-').replace(/\-+/g, '-').replace(/\-$/, '');
     }
+
+    formatted.name = removeKeywords(formatted.name);
+
     Trakt._debug('Parsed: '+formatted.name);
     return {
-        title: formatted.name.replace(/[^a-z0-9]/g, '-')
-            /*.replace(/\-+/g, '-')
-            .replace(/\-$/, '')*/,
+        title: formatted.name
+            .replace(/[^a-z0-9]/g, '-')
+            .replace(/\-+/g, '-')
+            .replace(/\-$/, ''),
         season: formatted.season,
         episode: formatted.episode,
         year: formatted.year
@@ -124,18 +129,36 @@ var checkYear = function (obj) {
 
 var checkTraktSearch = function (trakt, filename) {
     return new Promise(function (resolve, reject) {
+        // stats
+        var success = 0,
+            fail = 0;
+
+        // words in title
         var traktObj = trakt
             .match(/[\w+\s+]+/ig)[0]
             .split(' ');
+
+        // verification
         traktObj.forEach(function (word) {
+            // check only words longer than 4 chars
             if (word.length >= 4) {
                 var regxp = new RegExp(word.slice(0, 3), 'ig');
-                if (filename.replace(/\W/ig, '').match(regxp) === null) {
-                    return reject('Trakt search result did not match the filename');
-                }
+                filename.replace(/\W/ig, '').match(regxp) === null ?
+                    fail++ :
+                    success++;
             }
         });
-        resolve();
+
+        // avoid /0 errors
+        if (success + fail === 0) fail = 1;
+
+        // calc rate
+        var successRate = success / (success + fail);
+        Trakt._debug('Trakt search matching rate: '+(successRate*100)+'%');
+
+        successRate >= .7 ? 
+            resolve() :
+            reject('Trakt search result did not match the filename');
     });
 };
 
@@ -227,7 +250,6 @@ Matcher.match = function (obj) {
             });
         });
     })).then(function (arr) {
-        console.log(arr)
         for (var i in arr) {
             if (arr[i].error === null) {
                 return arr[i].data;
