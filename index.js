@@ -128,38 +128,34 @@ var checkYear = function (obj) {
 };
 
 var checkTraktSearch = function (trakt, filename) {
-    return new Promise(function (resolve, reject) {
-        // stats
-        var success = 0,
-            fail = 0;
+    // stats
+    var success = 0,
+        fail = 0;
 
-        // words in title
-        var traktObj = trakt
-            .match(/[\w+\s+]+/ig)[0]
-            .split(' ');
+    // words in title
+    var traktObj = trakt
+        .match(/[\w+\s+]+/ig)[0]
+        .split(' ');
 
-        // verification
-        traktObj.forEach(function (word) {
-            // check only words longer than 4 chars
-            if (word.length >= 4) {
-                var regxp = new RegExp(word.slice(0, 3), 'ig');
-                filename.replace(/\W/ig, '').match(regxp) === null ?
-                    fail++ :
-                    success++;
-            }
-        });
-
-        // avoid /0 errors
-        if (success + fail === 0) fail = 1;
-
-        // calc rate
-        var successRate = success / (success + fail);
-        Trakt._debug('Trakt search matching rate: '+(successRate*100)+'%');
-
-        successRate >= .7 ? 
-            resolve() :
-            reject('Trakt search result did not match the filename');
+    // verification
+    traktObj.forEach(function (word) {
+        // check only words longer than 4 chars
+        if (word.length >= 4) {
+            var regxp = new RegExp(word.slice(0, 3), 'ig');
+            filename.replace(/\W/ig, '').match(regxp) === null ?
+                fail++ :
+                success++;
+        }
     });
+
+    // avoid /0 errors
+    if (success + fail === 0) fail = 1;
+
+    // calc rate
+    var successRate = success / (success + fail);
+    Trakt._debug('Trakt search matching rate: '+(successRate*100)+'%');
+
+    return successRate >= .7;
 };
 
 var searchMovie = function (title, year) {
@@ -173,12 +169,14 @@ var searchMovie = function (title, year) {
             if (!summary.length) {
                 reject('Trakt could not find a match');
             } else {
-                return checkTraktSearch(summary[0].movie.title, title).then(function () {
+                if (checkTraktSearch(summary[0].movie.title, title)) {
                     resolve({
                         movie: summary[0].movie,
                         type: 'movie'
                     });
-                });
+                } else {
+                    reject('Trakt search result did not match the filename');
+                }
             }
         }).catch(reject);
     });
