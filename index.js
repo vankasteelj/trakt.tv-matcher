@@ -89,10 +89,17 @@ var injectQuality = function (title) {
 };
 
 var removeKeywords = function (str) {
-    for (var i = 0, len = keywordFilter.length; i < len; i++) {
-        str = str.replace(keywordFilter[i], '');
+    console.log(str)
+    var words = str.split(' ');
+    for (var i = 0, leni = words.length; i < leni; i++) {
+        for (var j = 0, lenj = keywordFilter.length; j < lenj; j++) {
+            if (words[i] === keywordFilter[j]) {
+                words[i] = '';
+            }
+        }
     }
-    return str.trim();
+
+    return words.join(' ').trim();
 };
 
 var formatTitle = function (title) {
