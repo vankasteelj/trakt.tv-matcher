@@ -117,7 +117,7 @@ var formatTitle = function(title) {
             .replace(/\-$/, ''),
         season: formatted.season,
         episode: formatted.episode,
-        year: formatted.year
+        year: formatted.year || formatted.aired
     };
 };
 
@@ -136,7 +136,7 @@ var checkApostrophy = function(obj) {
 
 var checkYear = function(obj) {
     if (obj.season && obj.episode) {
-        var maybe = '' + obj.season + obj.episode;
+        var maybe = '' + obj.season + obj.episode[0];
         if (maybe.match(/19\d{2}|20\d{2}/) !== null && obj.title[0].match(/19\d{2}|20\d{2}/) === null) {
             obj.title.push(obj.title[0] + '-' + maybe);
         }
