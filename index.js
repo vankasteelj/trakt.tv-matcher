@@ -178,11 +178,14 @@ var checkTraktSearch = function(trakt, filename) {
 var searchMovie = function(title, year) {
     return new Promise(function(resolve, reject) {
         // find a matching movie
-        Trakt.search({
+        var searchObj = {
             query: title,
-            year: year,
             type: 'movie'
-        }).then(function(summary) {
+        };
+        if (year) {
+            searchObj.years = year;
+        }
+        Trakt.search.text(searchObj).then(function(summary) {
             if (!summary.length) {
                 reject('Trakt could not find a match');
             } else {
