@@ -180,8 +180,7 @@ var searchMovie = function(title, year) {
         // find a matching movie
         var searchObj = {
             query: title,
-            type: 'movie',
-            extended: 'images'
+            type: 'movie'
         };
         if (year) {
             searchObj.years = year;
@@ -215,7 +214,7 @@ var searchEpisode = function(title, season, episode, year) {
         // find a matching show
         Trakt.shows.summary({
             id: title,
-            extended: 'full,images'
+            extended: 'full'
         }).then(function(summary) {
             match = true;
             // find the corresponding episode
@@ -223,7 +222,7 @@ var searchEpisode = function(title, season, episode, year) {
                 id: title,
                 season: season,
                 episode: episode,
-                extended: 'full,images'
+                extended: 'full'
             }).then(function(episodeSummary) {
                 resolve({
                     show: summary,
