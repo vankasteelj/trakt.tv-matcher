@@ -25,13 +25,13 @@ var injectTorrent = function(file, torrent) {
     if (clean === null || clean[0] === '') {
         parsed = torrent;
     } else {
-        parsed = clean[0].replace(clean[1], '');
+        parsed = clean[0].replace(clean[1], '').replace(/\s+/, '');
     }
 
     var regx = new RegExp(parsed.split(/\W/)[0], 'ig');
     var duplicate = file.match(regx);
 
-    if (duplicate === null) {
+    if (duplicate === null && parsed.toLowerCase() !== 'from') {
         file = parsed + ' ' + file;
     }
 
