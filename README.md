@@ -13,7 +13,9 @@ NOTICE: requires trakt.tv module! Load this plugin directly through `trakt.tv` m
 var Trakt = require('trakt.tv');
 var trakt = new Trakt({
     client_id: '<your id>', // mandatory trakt id
-    plugins: ['matcher'] // this loads the plugin
+    plugins: {
+        matcher: require('trakt.tv-matcher')
+    }
 });
 ```
 
