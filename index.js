@@ -180,7 +180,8 @@ var searchMovie = function(title, year) {
         // find a matching movie
         var searchObj = {
             query: title,
-            type: 'movie'
+            type: 'movie',
+            extended: 'full'
         };
         if (year) {
             searchObj.years = year;
