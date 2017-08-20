@@ -179,7 +179,7 @@ var searchMovie = function(title, year) {
     return new Promise(function(resolve, reject) {
         // find a matching movie
         var searchObj = {
-            query: title,
+            query: title.replace(/-s-/g, 's-').replace(/-/g, ' '), // for some reason, it doesnt go well with - or apostrophies
             type: 'movie',
             extended: 'full'
         };
