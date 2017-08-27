@@ -109,7 +109,14 @@ var formatTitle = function(title) {
 
     formatted.name = removeKeywords(formatted.name);
 
-    Trakt._debug('Parsed: ' + formatted.name);
+    var tmpYear = formatted.year || formatted.aired;
+    if (tmpYear) {
+        if (title.match(new RegExp(tmpYear+'\\Wyear', 'i')) !== null) {
+            tmpYear = undefined;
+        }
+    }
+
+    Trakt._debug('Parsed: ' + formatted.name);	
     return {
         title: formatted.name
             .replace(/[^a-z0-9]/g, '-')
@@ -117,7 +124,7 @@ var formatTitle = function(title) {
             .replace(/\-$/, ''),
         season: formatted.season,
         episode: formatted.episode,
-        year: formatted.year || formatted.aired
+        year: tmpYear
     };
 };
 
