@@ -111,7 +111,7 @@ var formatTitle = function(title) {
 
     var tmpYear = formatted.year || formatted.aired;
     if (tmpYear) {
-        if (title.match(new RegExp(tmpYear+'\\Wyear', 'i')) !== null) {
+        if (title.match(new RegExp(tmpYear+'\\W(year|light|meter|feet|miles)', 'i')) !== null) {
             tmpYear = undefined;
         }
     }
