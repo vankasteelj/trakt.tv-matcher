@@ -24,7 +24,7 @@
         "url": "https://github.com/vankasteelj/trakt.tv-matcher/issues"
     },
     "dependencies": {
-        "video-name-parser": "1.x.x",
-        "trakt.tv": "^5.x.x"
+        "video-name-parser": "^1.4.6",
+        "trakt.tv": "^7.1.0"
     }
 }
