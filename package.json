@@ -1,6 +1,6 @@
 {
     "name": "trakt.tv-matcher",
-    "version": "5.2.0",
+    "version": "7.0.0",
     "description": "Plugin adding a matcher for trakt.tv module",
     "main": "index.js",
     "repository": {
