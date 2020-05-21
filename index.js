@@ -211,7 +211,7 @@ const searchMovie = (title, year) => {
 
 const searchEpisode = (title, season, episode, year) => {
     return new Promise((resolve, reject) => {
-        if (!title || !season || !episode) {
+        if (!title || (!season && season !== 0) || (!episode && episode !==0)) {
             return reject('Title, season and episode need to be passed');
         }
         if (year && title.indexOf(year) === -1) {
