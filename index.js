@@ -66,6 +66,15 @@ const parseInput = (obj) => {
     }
 };
 
+const detectImdbID = (title) => {
+  const matcher = title.match(/tt\d+/)
+  if (matcher && matcher[0]) {
+    return matcher[0]
+  } else {
+    return
+  }
+};
+
 const detectQuality = (title) => {
     if (title.match(/480[pix]/i)) {
         return 'SD';
@@ -182,30 +191,41 @@ const checkTraktSearch = (trakt, filename) => {
 
 const searchMovie = (title, year) => {
     return new Promise((resolve, reject) => {
-        // find a matching movie
-        let searchObj = {
-            query: title.replace(/-s-/g, 's-').replace(/-/g, ' '), // for some reason, it doesnt go well with - or apostrophies
-            type: 'movie',
-            extended: 'full'
-        };
-        if (year) {
-            searchObj.years = year;
+        const imdb = detectImdbID(title)
+        if (imdb) {
+          Trakt.movies.summary({id: imdb, extended: 'full'}).then((r) => {
+            match = true;
+            resolve({
+              movie: r,
+              type: 'movie'
+            })
+          })
+        } else {
+          // find a matching movie
+          let searchObj = {
+              query: title.replace(/-s-/g, 's-').replace(/-/g, ' '), // for some reason, it doesnt go well with - or apostrophies
+              type: 'movie',
+              extended: 'full'
+          };
+          if (year) {
+              searchObj.years = year;
+          }
+          Trakt.search.text(searchObj).then((summary) => {
+              if (!summary.length) {
+                  reject('Trakt could not find a match');
+              } else {
+                  if (checkTraktSearch(summary[0].movie.title, title)) {
+                      match = true;
+                      resolve({
+                          movie: summary[0].movie,
+                          type: 'movie'
+                      });
+                  } else {
+                      reject('Trakt search result did not match the filename');
+                  }
+              }
+          }).catch(reject);
         }
-        Trakt.search.text(searchObj).then((summary) => {
-            if (!summary.length) {
-                reject('Trakt could not find a match');
-            } else {
-                if (checkTraktSearch(summary[0].movie.title, title)) {
-                    match = true;
-                    resolve({
-                        movie: summary[0].movie,
-                        type: 'movie'
-                    });
-                } else {
-                    reject('Trakt search result did not match the filename');
-                }
-            }
-        }).catch(reject);
     });
 };
 
